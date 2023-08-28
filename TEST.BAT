@@ -1,0 +1,27 @@
+mCHOICE /C:ABC /n /t:b,10 "Wybierz opcje A / B lub C (domyslnie B po 10 sek.): "
+@ECHO OFF
+IF ERRORLEVEL 255 GOTO FAIL
+IF ERRORLEVEL 3 GOTO C
+IF ERRORLEVEL 2 GOTO B
+IF ERRORLEVEL 1 GOTO A
+IF ERRORLEVEL 0 GOTO BRK
+
+:FAIL
+ECHO BLAD!
+
+:C
+ECHO Wybrano opcje C
+GOTO DOS
+
+:B
+ECHO Wybrano opcje B
+GOTO DOS
+
+:A
+ECHO Wybrano opcje A
+GOTO DOS
+
+:BRK
+ECHO ctrl+c
+
+:DOS

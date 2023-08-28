@@ -1,0 +1,11 @@
+#--- mCHOICE V1.0 ---
+
+# 3BUILD: CLEAN MCHOICE.COM
+
+MCHOICE.COM: MAIN.OBJ
+             tlink /x /t MAIN.OBJ,MCHOICE.COM
+MAIN.OBJ: MAIN.ASM
+        tasm /m MAIN.ASM
+CLEAN:
+       DEL MAIN.OBJ
+
