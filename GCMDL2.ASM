@@ -51,7 +51,7 @@ switch:
                 jmp endParametrs
 switchQ:
                 mov statCMDL,6
-                je endParametrs
+                jmp endParametrs
 switchN:
                 mov statN,1
                 cmp BYTE PTR [si],20h
