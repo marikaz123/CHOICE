@@ -187,6 +187,7 @@ GetSwCParam     PROC
 GetSwCParam     ENDP
 ;------------------------------------------------------------ GetSwTParam ---
 GetSwTParam     PROC
+                mov cx,3        ;max ilosc cyfr
                 cmp BYTE PTR [si],':'
                 jne getDCh
                 inc si
@@ -197,7 +198,6 @@ GetSwTParam     PROC
                 jne errGS
                 inc si
 
-                mov cx,3        ;max ilosc cyfr
                 lea bx,[fctr+4]
                 xor ax,ax
                 xor dx,dx
