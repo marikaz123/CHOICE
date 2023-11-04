@@ -14,8 +14,9 @@
  - Kompatybilny i przetestowany na maszynach wirtualnych z MS-DOS 5.0,
    MS-DOS 6.22, FreeDOS 1.3 (poza ctrl-c)
  - dziala identycznie jak CHOICE z MS-DOS 6.22 oraz FreeDOS, patrz UWAGA.
-   Dlatego dokumentacja CHOICE MS-DOS 6.22 jest literalnie zgodna z mCHOICE.
-   (W MS-DOS parametr nn = 99, w mCHOICE jest nnn = 999)
+   Dlatego dokumentacja CHOICE MS-DOS 6.22 jest literalnie zgodna z mCHOICE,
+   poza parametrem nn, ktory w DOS = 0..99 a tu jest nnn = 0..999 oraz /B 
+   z FreeDOS, ktorego w DOS i tu nie ma.
 
 
         UWAGI
@@ -26,9 +27,8 @@
    | are from 0 to 99. If 0 is specified, there will be no pause before
    | defaulting.
 
-   DOS-owe CHOICE jednak zatrzymuje sie na prompt-cie. Tak wlasciwie to sie
-   nie zatrzymuje, ale to inny temat.
-
+   W DOS i FreeDOS, CHOICE po wprowadzeniu nn=0 i tak wyswietla prompt
+   i czeka na klawisz.
    mCHOICE jest pozbawiony tej 'przypadlosci' i dziala zgodnie z zacytowanym
    fragmentem dokumentacji.
 
@@ -37,5 +37,4 @@
    | If the user presses CTRL+BREAK or CTRL+C, CHOICE returns an ERRORLEVEL
    | value of 0.
 
-   Ta wersja mCHOICE jest komaptybilna z MS-DOS, natomiast we FreeDOS nie
-   dziala prawidlowo (zwraca inny ERRORLEVEL).
+   Tylko we FreeDOS nie zwaraca 0 w ERRORLEVEL (?!)
