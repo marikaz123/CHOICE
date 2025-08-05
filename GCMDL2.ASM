@@ -151,8 +151,11 @@ GetPrompt       ENDP
 GetSwCParam     PROC
                 mov cx,CHOICESLEN
                 cmp BYTE PTR [si],':'
-                jne getChoices
+                jne na20h
                 inc si
+       na20h:
+                cmp BYTE PTR [si],20h
+                jbe _ret
     getChoices:
                 lodsb
                 IFDEF NOSLASH    ;FreeDOS does not allow '/'
@@ -174,6 +177,7 @@ GetSwCParam     PROC
          endGC:
                 mov BYTE PTR [di],-1
                 dec si
+         _ret:
                 ret
 GetSwCParam     ENDP
 ;---------------------------------------------------------- GetSwTParam -----

@@ -1,5 +1,5 @@
 ;----------------------------------------------------------------------------
-; mCHOICE ver. 1.2 ** ~1994 'marikaz'
+; mCHOICE ver. 1.2.1 ** MOD2508 ** ~1994 'marikaz'
 ;----------------------------------------------------------------------------
 ; mCHOICE moze zastapic CHOICE z MS-DOS lub FreeDOS. Dziala z MS-DOS 2.0+
 ; Funkcjonalnie identyczny z CHOICE z MS-DOS
@@ -7,7 +7,7 @@
 ; mCHOICE can replace CHOICE from MS-DOS or FreeDOS. Works with MS-DOS 2.0+
 ;----------------------------------------------------------------------------
 
-CHOICESLEN  EQU 7ah
+CHOICESLEN  EQU 79h
 ERRORFLAG   EQU -1
 EOS         EQU 0
 
@@ -248,7 +248,7 @@ delay     DW 0
 
           INCLUDE msg.inc
 
-cChar     DB 'yn'
+cChar     DB 'yn',-1
 ccb       DB CHOICESLEN DUP (?)
 prompt    LABEL BYTE
 Main            ENDP
