@@ -1,6 +1,6 @@
 # -- [m]CHOICE --
 
 CHOICE.COM: MAIN.OBJ
-            tlink /x /t MAIN.OBJ,CHOICE.COM
-MAIN.OBJ: MAIN.ASM GCMDL2.OBJ MSG.INC
+            tlink /t MAIN.OBJ,CHOICE.COM
+MAIN.OBJ: MAIN.ASM GCMDL2.ASM MSG.INC
           tasm /m MAIN.ASM

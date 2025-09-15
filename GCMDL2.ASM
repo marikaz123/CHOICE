@@ -1,235 +1,194 @@
-;----------------------------------------------------------------
-; GetCMDLine * REV. D                                * marikaz *
-;----------------------------------------------------------------
-; No parametrs                                           (ret 0)
-; Parametrs without errors                               (ret 1)
-; Invalid switch on command line.                        (ret 2)
-; Incorrect timeout syntax.                              (ret 3)
-; Only one prompt string allowed.                        (ret 4)
-; Timeout default not in specified (or default) choices. (main)
-; Help [/?]                                              (ret 6)
-;----------------------------------------------------------------
+;GetParam:PROC :: /marikaz/
+;
+;[/c[:]choices] [/n] [/s] [/t:c,nn] [text]
+;
+;Arguments without errors                                (ret 00)
+;Help [/?]                                               (ret 02)
+;Invalid switch on command line.                         (ret 04)
+;Incorrect timeout syntax.                               (ret 06)
+;Only one prompt string allowed.                         (ret 08)
+;Invalid choice switch syntax.                           (ret 0A)
+;Timeout default not in specified (or default) choices.   --
 
-SPC = 20h
-TAB = 9
-CR  = 0Dh
-SW  = '/'
-QM  = '"'
-Q   = '?'
-N   = 'n'
-S   = 's'
-C   = 'c'
-T   = 't'
+QUO = 22h
 
-GetCmdLine      PROC
-                xor ax,ax          ;ax=error code
-                mov si,80h
-                cmp BYTE PTR [si],1
-                jbe endParametrs
-                inc si
-gCmdL:
-                lodsb
-                cmp al,SPC
-                je skipBC
-                cmp al,TAB
-                je skipBC
-                cmp al,CR
-                je endParametrs
-                mov statCMDL,2
-                jmp endParametrs
-        skipBC:
-                lodsb
-                cmp al,SPC
-                je skipBC
-                cmp al,TAB
-                je skipBC
-                cmp al,CR
-                je endParametrs
+GetParam PROC
+         LOCALS
+         mov si,80h
+         or BYTE PTR [si],0
+         je @@eop0
+         inc si
+gpar:
+         cmp BYTE PTR [si],20h
+         je gpar-1
+         cmp BYTE PTR [si],9
+         je gpar-1
+         cmp BYTE PTR [si],0dh
+         je @@eop0 ; ---> jedyne wyjscie bez bledu
+         cmp BYTE PTR [si],'/'
+         je switch
+         cmp BYTE PTR [si],20h
+         jl @@eop4  ;poza podst. ASCII
+prmpt:
+         test [fl],MASK x
+         jnz @@eop8
+         or [fl],MASK x
+         mov cx,LENGTH prompt
+         lea di,prompt
+         xor ax,ax
+         lodsb
+         cmp al,QUO
+         je getpq
+         dec si ;wyrownaj
+getp:
+         lodsb
+         cmp al,20h
+         jb eotx
+         cmp al,'/'
+         jne @@cq
+         cmp BYTE PTR [si-2],20h
+         jbe eqsi
+         jmp @@eop4
+   @@cq:
+         cmp al,QUO
+         je @@eop8
+         stosb
+         loop getp
+         jmp @@eop4
+eqsi:
+         dec si
+eotx:
+         dec si
+         mov BYTE PTR [di],0
+         jmp gpar
 
-                mov statCMDL,1
-                cmp al,SW
-                je switches
-                ;prompt
-                test pFlags,10000b
-                jz _tx
-                mov statCMDL,4
-                jmp endParametrs
-           _tx:
-                or pFlags,10000b
-                lea di,prompt
-                call GetPrompt
-                cmp ax,ERRORFLAG
-                jne gCmdL
-                mov statCMDL,2
-                jmp endParametrs
-switches:
-                lodsb
-                cmp al,Q
-                jne switchN
-                mov statCMDL,6
-                jmp endParametrs
-switchN:
-                or al,100000b
-                cmp al,N
-                jne switchS
-                or pFlags,100b
-                jmp gCmdL
-switchS:
-                cmp al,S
-                jne switchC
-                or pFlags,10b
-                jmp gCmdL
-switchC:
-                cmp al,C
-                jne switchT
-                test pFlags,1000b
-                jnz errSwC
-                or pflags,1000b
-                lea di,cChar
-                call GetSwCParam
-                cmp ax,ERRORFLAG
-                jne gCmdL
-        errSwC:
-                mov statCMDL,2
-                jmp endParametrs
-switchT:
-                cmp al,T
-                je _st
-                mov statCMDL,2
-                jmp endParametrs
-           _st:
-                test pFlags,1
-                jnz errSwT
-                or pFlags,1
-                call GetSwTParam
-                cmp ax,ERRORFLAG
-                jne gCmdL
-        errSwT:
-                mov statCMDL,3
-endParametrs:
-                ret
-GetCmdLine      ENDP
-;--------------------------------------------------------- GetPrompt -------
-GetPrompt       PROC
-                cmp al,QM
-                je qMark
-         getPR:
-                cmp al,CR
-                je _cr
-                cmp al,SW
-                je _sw
-                cmp al,QM
-                je errQ
-                stosb
-                lodsb
-                jmp getPR
-           _sw:
-                dec si ;   slash
-                dec di ; /
-           _cr:
-                dec si
-                mov al,SPC
-                stosb
-                mov prTail,di
-                ret
-qMark:
-                lodsb
-                cmp al,QM
-                je _qm
-                cmp al,CR
-                je errQ
-                stosb
-                jmp qMark
-           _qm:
-                mov prTail,di
-                ret
-          errQ:
-                mov ax,ERRORFLAG
-                ret
-GetPrompt       ENDP
-;--------------------------------------------------------- GetSwCParam ------
-GetSwCParam     PROC
-                mov cx,CHOICESLEN
-                cmp BYTE PTR [si],':'
-                jne na20h
-                inc si
-       na20h:
-                cmp BYTE PTR [si],20h
-                jbe _ret
-    getChoices:
-                lodsb
-                IFDEF NOSLASH    ;FreeDOS does not allow '/'
-                 cmp al,SW       ;but MS-DOS does...
-                 je errGC
-                ENDIF
-                cmp al,CR
-                je endGC
-                cmp al,TAB
-                je endGC
-                cmp al,SPC
-                je endGC
-                jb errGC
-                stosb
-                loop getChoices
-         errGC:
-                mov ax,ERRORFLAG
-                ret
-         endGC:
-                mov BYTE PTR [di],-1
-                dec si
-         _ret:
-                ret
-GetSwCParam     ENDP
-;---------------------------------------------------------- GetSwTParam -----
-GetSwTParam     PROC
-                cmp BYTE PTR [si],':'
-                jne getDCh
-                inc si
-        getDCh:
-                lodsb
-                mov defChar,al
-                cmp BYTE PTR [si],','
-                jne errGS
-                inc si
-                lodsw
-                cmp al,'0'
-                jb errGS
-                cmp al,'9'
-                ja errGS
-                cmp ah,SPC
-                je oneD
-                cmp ah,TAB
-                je oneD
-                cmp ah,CR
-                je oneD
-                cmp ah,'0'
-                jb errGS
-                cmp ah,'9'
-                jb twoD
-                jmp errGS
-          oneD:
-                sub al,'0'
-                mov BYTE PTR delay,al
-                dec si  ;1d
-                ret
-          twoD:
-                cmp BYTE PTR [si],SPC
-                je _td
-                cmp BYTE PTR [si],TAB
-                je _td
-                cmp BYTE PTR [si],CR
-                jne errGS
-           _td:
-                sub ax,'00'
-                shl al,1
-                mov dl,al
-                shl al,2
-                add al,dl
-                add al,ah
-                mov BYTE PTR delay,al
-                ret
+getpq:
+         lodsb
+         cmp al,QUO ;tu tylko zamykajacy
+         jne noq
+         cmp BYTE PTR [si],20h
+         ja @@eop8
+         mov BYTE PTR [di],0
+         jmp gpar
+  noq:
+         stosb
+         loop getpq
+         jmp @@eop8
 
-         errGS:
-                mov ax,ERRORFLAG
-                ret
-GetSwTParam     ENDP
+switch:
+         inc si
+         lodsb
+         cmp al,'?'
+         je @@eop2
+         or al,20h
+         cmp al,'c'
+         je caseC
+         cmp al,'n'
+         je caseN
+         cmp al,'s'
+         je caseS
+         cmp al,'t'
+         je caseT
+         jmp @@eop4
+caseC:
+         test fl,MASK c
+         jnz @@eop4
+         or fl,MASK c
+         mov di,OFFSET choices
+         cmp BYTE PTR [si],':'
+         jne @@c
+         inc si
+    @@c:
+         cmp BYTE PTR [si],20h ; samo '/c[:]' bedzie traktowane
+         jna gpar              ; jak zestaw domyslny
+         mov cx,32
+gchoi:
+         cmp BYTE PTR [si],20h
+         ja @@ned
+         neg cx
+         add cx,32
+         mov WORD PTR [lcho],cx
+         jmp gpar
+  @@ned:
+         cmp BYTE PTR [si],'/'
+         je @@eop10
+         cmp BYTE PTR [si],'~' ;jako koniec prawidlowych znakow
+         ja @@eop10
+         movsb
+         loop gchoi
+         jmp @@eop10
+caseN:
+         test fl,MASK n
+         jnz @@eop4
+         or fl,MASK n
+         cmp BYTE PTR [si],20h
+         ja @@eop4
+         jmp gpar
+caseS:
+         test fl,MASK s
+         jnz @@eop4
+         or fl,MASK s
+         cmp BYTE PTR [si],20h
+         ja @@eop4
+         jmp gpar
+caseT:
+         test fl,MASK t
+         jnz @@eop4
+         or fl,MASK t
+         cmp BYTE PTR [si],':'
+         jne @@t0
+         inc si
+   @@t0:
+         lodsb
+         cmp al,20h
+         jna @@eop6
+         mov tchr,al
+         lodsb
+         cmp al,',' ;obowiazkowy
+         jne @@eop6
+
+         lodsw
+         cmp al,'0'
+         jb @@eop6
+         cmp al,'9'
+         ja @@eop6
+         cmp ah,20h ; jesli ah<=20h to pojedyncza cyfra
+         jbe @@sd   ;/
+         cmp ah,'0'
+         jb @@eop6
+         cmp ah,'9'
+         ja @@eop6
+         sub ax,3030h
+         mov bl,10
+         mov bh,ah
+         mul bl
+         add al,bh
+   @@wr:
+         mov tdly,al
+         cmp BYTE PTR [si],20h
+         ja @@eop6
+         jmp gpar
+   @@sd:
+         dec si ;korekta poz.
+         sub al,30h
+         jmp @@wr
+
+@@eop0:
+         mov ax,0
+         ret
+@@eop2:
+         mov ax,2
+         ret
+@@eop4:
+         mov ax,4
+         ret
+@@eop6:
+         mov ax,6
+         ret
+@@eop8:
+         mov ax,8
+         ret
+@@eop10:
+         mov ax,10
+         ret
+         ENDP
