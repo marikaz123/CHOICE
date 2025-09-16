@@ -109,12 +109,11 @@ oloop:
         mov cx,18  ; 1s ~18*(RTC tick)
 iloop:
         mov bp,es:[RTC]
-
 gKey:
         mov ah,6  ;stdio
         mov dl,-1
         int 21h
-        ;dla al=0 musi dzialac petla bo ew. timer
+        jz _skip ; al=0 ew.timer
         cmp al,3 ;ctrl+c ?
         jne _nx1
         mov al,0  ;errlvl = 0
@@ -143,16 +142,13 @@ _ncs:
         call FindChar
         jnc _chf
          IFDEF BEEP
-          or al,al ;  proteza..caly czas dziala petla
-          jz skip  ; '
           mov al,6
           mov dl,7
           int 21h
-          skip:
          ENDIF
+_skip:
         test fl,MASK t
         jz gKey
-
         cmp bp,es:[RTC]
         je gKey
         loop iloop
