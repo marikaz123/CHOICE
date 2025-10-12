@@ -161,16 +161,14 @@ _chf:
         mov ah,6
         mov dl,al
         int 21h
-        mov al,bl
 
 exit:
-        push ax
         mov ah,6
         mov dl,0dh
         int 21h
         mov dl,0ah
         int 21h
-        pop ax
+        mov al,bl
         mov ah,4ch
         int 21h
 
