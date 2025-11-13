@@ -1,4 +1,4 @@
-CHOICE v1.2 (z wykopalisk)
+CHOICE v1.3 (z wykopalisk)
 ---
 Zamiennik CHOICE z MS-DOS. Funkcjonalnie identyczny, trochę krótszy. Powinien działać już od MS-DOS 2.0   
 Testowany (niestety dość pobieżnie) na VM z:   
