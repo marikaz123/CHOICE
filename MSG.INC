@@ -1,5 +1,6 @@
-;    --- napisy ---
-err2 DB 8,8," v1.3 - (c)1994 'marikaz'",13,10,13,10
+;info
+
+err2 DB 8,8," v1.3 - (c)1995 'marikaz'",13,10,13,10
 form DB '  CHOICE.COM [/C[:]choices] [/N] [/S] [/T[:]c,nn] [text]',13,10,0
 
 cont DB 13,10

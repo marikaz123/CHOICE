@@ -1,10 +1,10 @@
 ;---------------------------------------------------------------------------
-;  mCHOICE v1.3    /marikaz/
+;  iCHOICE v1.3                                                   'marikaz'
 ;---------------------------------------------------------------------------
-; mCHOICE czeka az uzytkownik wybierze jeden znak z zestawu znakow do
+; iCHOICE czeka az uzytkownik wybierze jeden znak z zestawu znakow do
 ; wyboru. Pozycja znaku w tym zestawie jest jednoczesnie wartoscia
 ; errorlevel zwracana do systemu.
-; mCHOICE zastepuje CHOICE z systemu MS-DOS. Funkcjonalnie jest identyczny.
+; iCHOICE zastepuje CHOICE z systemu MS-DOS. Funkcjonalnie jest identyczny.
 ; Dodatkowo:
 ; Zdefiniowanie znaku '_' pozwala uzyc SPACE, a znaku '*' ENTER.
 ;
@@ -17,7 +17,7 @@
 
 CFL RECORD x:1,c:1,n:1,s:1,t:1
 
-RTC  = 46Ch
+RTC  = 46Ch;zegarek
 QSPC = '_' ;znak dla spacji
 QENT = '*' ;dla entera
 
@@ -28,19 +28,20 @@ JUMPS
 ORG 100h
 
 Main    PROC
-        mov ax,3000h
+        mov ax,3000h ;wersja DOS
         int 21h
         or al,al
         jnz begin
         mov si,OFFSET errE
         call PrnStr
-        ret
+        ret ; =int 20h
 begin:
         call GetParam
         or ax,ax
         jnz svMsgs
-        mov di,OFFSET choices ;nie zmienia sie w prog.
-        test fl,MASK s ;nie ma /s -tylko duze litery
+        mov di,OFFSET choices ;tylko dla FindChar i sie nie zmienia w prog.
+        ;-- gdy niewazna wielkosc znakow operuj tylko na duzych literach
+        test fl,MASK s
         jnz chkTc
         mov cx,WORD PTR [lcho]
         mov si,di
@@ -77,7 +78,6 @@ ifChoi: ;czy choices
         jnz ifTimo
         mov si,di
         mov cx,WORD PTR [lcho]
-
         mov ah,6
         mov dl,'['
         int 21h
@@ -101,24 +101,24 @@ ifTimo:
 
         mov cx,WORD PTR [tDly]
         or cx,cx
-        jz _dch    ;pisz domysly znak
+        jz _dch   ;pisz domysly znak
         xor ax,ax
-        mov es,ax ;BIOS
+        mov es,ax ;segment es:=BIOS
 oloop:
-        push cx    ;
-        mov cx,18  ; 1s ~18*(RTC tick)
+        push cx
+        mov cx,18 ;1s ~18*(RTC tick)
 iloop:
         mov bp,es:[RTC]
 gKey:
         mov ah,6  ;stdio
-        mov dl,-1
+        mov dl,-1 ;query key
         int 21h
-        jz _skip ; al=0 ew.timer
-        cmp al,3 ;ctrl+c ?
+        jz _skip  ;al=0 tylko ew. timer
+        cmp al,3  ;ctrl+c ?
         jne _nx1
-        mov al,0  ;errlvl = 0
-        pop cx
-        jmp exit
+        mov al,0  ;tak errlvl  = 0
+        pop cx    ;>> pop cx dla ctrl+c
+        jmp exit  ;nie ma ew.
 _nx1:
         ;--- enter i spacja ---
         cmp al,0dh
@@ -131,7 +131,7 @@ _spc2:
         mov al,QSPC
         jmp _ncs
 _nspc:
-        test fl,MASK s
+        test fl,MASK s ;sprawdz case
         jnz _ncs
         cmp al,'a'
         jb _ncs
@@ -153,15 +153,14 @@ _skip:
         je gKey
         loop iloop
         pop cx
-        loop oloop
-_dch:   ;koniec czasu dla /t domyslny klawisz
+        loop oloop  ;RTC tick
+_dch:   ;koniec czasu dla /t pisz domyslny klawisz
         mov al,tchr
-        mov bl,tel
+        mov bl,tel ;&&
 _chf:
         mov ah,6
         mov dl,al
         int 21h
-
 exit:
         mov ah,6
         mov dl,0dh
@@ -197,26 +196,26 @@ elvl:
         jmp exit
 Main    ENDP
 
-PrnStr PROC
-       LOCALS
-       push ax
-       mov ah,6
-  @@l:
-       lodsb
-       or al,al
-       jz @@x
-       mov dl,al
-       int 21h
-       jmp @@l
-  @@x:
-       pop ax
-       ret
-PrnStr ENDP
+PrnStr  PROC
+        LOCALS
+        push ax
+        mov ah,6
+   @@l:
+        lodsb
+        or al,al
+        jz @@x
+        mov dl,al
+        int 21h
+        jmp @@l
+   @@x:
+        pop ax
+        ret
+PrnStr  ENDP
 
 FindChar PROC
          LOCALS
-; we:  al=kod znaku do znalezienia
-; wy:  bl=pozycja znaku w ciagu (errorlenel)
+;  we: al=kod znaku do znalezienia
+;  wy: bl=pozycja znaku w ciagu (errorlevel)
 ;blad: cy=znaku nie ma w stringu
          push cx di es
          mov dx,ds
@@ -249,4 +248,4 @@ INCLUDE msg.inc
 choices DB 'yn',30 DUP (?)
 prompt  DB 128 DUP (?)
 
-        END Main
+          END Main
