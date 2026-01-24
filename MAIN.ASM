@@ -100,10 +100,9 @@ ifTimo:
         jz gKey ; /t nie ma
 
         mov cx,WORD PTR [tDly]
-        or cx,cx
-        jz _dch   ;pisz domysly znak
+        jcxz _dch
         xor ax,ax
-        mov es,ax ;segment es:=BIOS
+        mov es,ax
 oloop:
         push cx
         mov cx,18 ;1s ~18*(RTC tick)
@@ -141,11 +140,11 @@ _nspc:
 _ncs:
         call FindChar
         jnc _chf
-         IFDEF BEEP
-          mov al,6
-          mov dl,7
-          int 21h
-         ENDIF
+        IFDEF BEEP
+         mov al,6
+         mov dl,7
+         int 21h
+        ENDIF
 _skip:
         test fl,MASK t
         jz gKey
@@ -156,7 +155,7 @@ _skip:
         loop oloop  ;RTC tick
 _dch:   ;koniec czasu dla /t pisz domyslny klawisz
         mov al,tchr
-        mov bl,tel ;&&
+        mov bl,tel
 _chf:
         mov ah,6
         mov dl,al

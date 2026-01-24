@@ -1,6 +1,5 @@
 ; GetParam:PROC - rev. B :: iCHOICE :: 1994 'marikaz'
 ;
-;parse line:
 ; [/c[:]choices] [/n] [/s] [/t:c,nn] [text]
 ;
 ;Arguments without errors                                 (ret 0)
@@ -27,11 +26,11 @@ gpar:
          cmp BYTE PTR [si],9
          je gpar-1
          cmp BYTE PTR [si],0dh
-         je @@eop0        ; ---> jedyne wyjscie bez bledu
+         je @@eop0 ;jedyne wyjscie bez bledu
          cmp BYTE PTR [si],'/'
          je switch
          cmp BYTE PTR [si],20h
-         jl @@eop4        ;czyli poza podst. ASCII
+         jl @@eop4 ;czyli poza podst. ASCII
 
 prmpt:   ;-----------------------------------------------------/ PROMPT /---
          test [fl],MASK x
@@ -51,7 +50,7 @@ getp:
          cmp al,'/'
          jne @@cq
          cmp BYTE PTR [si-2],20h
-         jbe eqsi ;i do parametrow
+         jbe eqsi
          jmp @@eop4
    @@cq:
          cmp al,QUO
